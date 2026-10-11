@@ -1,0 +1,20 @@
+name: HAPA
+environment: development
+debug: false
+workspace_root: .
+api:
+  host: 0.0.0.0
+  port: 8000
+  log_level: INFO
+temporal:
+  target: localhost:7233
+  namespace: hapa
+  workflow_queue: hapa-workflows
+docker:
+  socket_url: unix:///var/run/docker.sock
+  network: hapa-network
+  timeout_seconds: 30
+  use_rootless: true
+browser:
+  headless: true
+  screenshot_dir: artifacts/screenshots

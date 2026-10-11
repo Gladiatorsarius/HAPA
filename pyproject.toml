@@ -12,6 +12,7 @@ dependencies = [
     "opencv-python>=5.0.0.93",
     "playwright>=1.63.0",
     "pydantic>=2.14.0",
+    "temporalio>=1.16.0",
     "uvicorn>=0.54.0",
 ]
 
