@@ -21,9 +21,9 @@ This checklist is ordered by implementation phase and prioritized so the foundat
   - [x] OpenCV
 - [x] Create a shared application settings layer in [`config/settings.yaml`](config/settings.yaml) and a matching loader in `src/core/`
 - [x] Implement [`src/persistence/git_handler.py`](src/persistence/git_handler.py) for workspace diff capture
-- [ ] Implement [`src/persistence/temporal_workflows/snapshot_wf.py`](src/persistence/temporal_workflows/snapshot_wf.py) for periodic checkpointing
+- [x] Implement [`src/persistence/temporal_workflows/snapshot_wf.py`](src/persistence/temporal_workflows/snapshot_wf.py) for periodic checkpointing
 - [x] Add persistence tests under [`tests/test_persistence/`](tests/test_persistence/)
-- [ ] Define the startup contract in [`scripts/entrypoint.sh`](scripts/entrypoint.sh)
+- [x] Define the startup contract in [`scripts/entrypoint.sh`](scripts/entrypoint.sh)
 
 ## Phase 2: Sandboxing and execution subsystem
 
