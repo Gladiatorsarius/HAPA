@@ -1,3 +1,9 @@
+## 0.4.0 (2026-10-11)
+
+### Feat
+
+- **git_handler**: implement Git workspace diff capture and add tests
+
 ## 0.3.0 (2026-10-11)
 
 ### Feat
