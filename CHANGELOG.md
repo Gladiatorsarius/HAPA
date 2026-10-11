@@ -1,3 +1,9 @@
+## 0.6.0 (2026-10-11)
+
+### Feat
+
+- **entrypoint**: added entrypoint.sh to create the configured workspace
+
 ## 0.5.0 (2026-10-11)
 
 ### Feat
