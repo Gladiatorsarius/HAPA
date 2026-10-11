@@ -1,3 +1,9 @@
+## 0.5.0 (2026-10-11)
+
+### Feat
+
+- **snapshot_wf**: added snapshot workflow to make backups from agents every 5 seconds
+
 ## 0.4.0 (2026-10-11)
 
 ### Feat

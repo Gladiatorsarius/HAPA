@@ -46,6 +46,12 @@ The target layout described by the design artifacts is:
 - [`tests/`](../tests/) — API, tier, and persistence test suites
 - [`scripts/entrypoint.sh`](../scripts/entrypoint.sh) — container startup script
 
+The container entrypoint creates the configured workspace, checkpoint, and
+screenshot directories before starting the API. With no arguments it executes
+`uvicorn src.main:app` using `HAPA_API_HOST`, `HAPA_API_PORT`, and
+`HAPA_API_LOG_LEVEL`; an explicit command and its arguments are passed through
+unchanged.
+
 ## Layered system architecture
 
 ### 1. API gateway and ingress layer
