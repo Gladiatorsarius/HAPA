@@ -52,6 +52,17 @@ screenshot directories before starting the API. With no arguments it executes
 `HAPA_API_LOG_LEVEL`; an explicit command and its arguments are passed through
 unchanged.
 
+Phase 2 execution adapters are now implemented. Git worktrees provide
+copy-on-write workspace isolation; Docker execution uses scoped mounts,
+non-root containers, dropped capabilities, a read-only root filesystem, and
+disabled networking by default. Mode A wraps non-interactive Claude Code CLI
+execution and exposes structured results, while its security, performance, and
+edge-case personas validate structured `ReviewFinding` payloads. Mode B
+provides Playwright browser actions/screenshots and deterministic OpenCV
+region detection. Focused tests use injected clients for deterministic
+coverage; real Docker, Claude Code, and browser smoke tests remain deployment
+environment checks.
+
 ## Layered system architecture
 
 ### 1. API gateway and ingress layer

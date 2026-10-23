@@ -29,18 +29,18 @@ This checklist is ordered by implementation phase and prioritized so the foundat
 
 **Goal:** isolate task execution and create specialized worker backends.
 
-- [ ] Implement workspace isolation in [`src/tiers/tier3_execution/mode_b_docker/workspace.py`](src/tiers/tier3_execution/mode_b_docker/workspace.py)
-- [ ] Add copy-on-write support using Git worktrees or container volume overlays
-- [ ] Implement container lifecycle management in [`src/tiers/tier3_execution/mode_b_docker/container_mgr.py`](src/tiers/tier3_execution/mode_b_docker/container_mgr.py)
-- [ ] Enforce least-privilege container settings and scoped write volumes
-- [ ] Implement Claude Code CLI execution wrappers in [`src/tiers/tier3_execution/mode_a_code/runner.py`](src/tiers/tier3_execution/mode_a_code/runner.py)
-- [ ] Add multi-persona review agents:
-  - [ ] [`src/tiers/tier3_execution/mode_a_code/multi_persona/security_auditor.py`](src/tiers/tier3_execution/mode_a_code/multi_persona/security_auditor.py)
-  - [ ] [`src/tiers/tier3_execution/mode_a_code/multi_persona/performance_optimizer.py`](src/tiers/tier3_execution/mode_a_code/multi_persona/performance_optimizer.py)
-  - [ ] [`src/tiers/tier3_execution/mode_a_code/multi_persona/edge_case_tester.py`](src/tiers/tier3_execution/mode_a_code/multi_persona/edge_case_tester.py)
-- [ ] Implement Playwright automation bindings in [`src/tiers/tier3_execution/mode_b_docker/visual/browser.py`](src/tiers/tier3_execution/mode_b_docker/visual/browser.py)
-- [ ] Implement OpenCV-based visual parsing in [`src/tiers/tier3_execution/mode_b_docker/visual/vision.py`](src/tiers/tier3_execution/mode_b_docker/visual/vision.py)
-- [ ] Add execution-mode tests under [`tests/test_tiers/`](tests/test_tiers/)
+- [x] Implement workspace isolation in [`src/tiers/tier3_execution/mode_b_docker/workspace.py`](src/tiers/tier3_execution/mode_b_docker/workspace.py)
+- [x] Add copy-on-write support using Git worktrees or container volume overlays
+- [x] Implement container lifecycle management in [`src/tiers/tier3_execution/mode_b_docker/container_mgr.py`](src/tiers/tier3_execution/mode_b_docker/container_mgr.py)
+- [x] Enforce least-privilege container settings and scoped write volumes
+- [x] Implement Claude Code CLI execution wrappers in [`src/tiers/tier3_execution/mode_a_code/runner.py`](src/tiers/tier3_execution/mode_a_code/runner.py)
+- [x] Add multi-persona review agents:
+  - [x] [`src/tiers/tier3_execution/mode_a_code/multi_persona/security_auditor.py`](src/tiers/tier3_execution/mode_a_code/multi_persona/security_auditor.py)
+  - [x] [`src/tiers/tier3_execution/mode_a_code/multi_persona/performance_optimizer.py`](src/tiers/tier3_execution/mode_a_code/multi_persona/performance_optimizer.py)
+  - [x] [`src/tiers/tier3_execution/mode_a_code/multi_persona/edge_case_tester.py`](src/tiers/tier3_execution/mode_a_code/multi_persona/edge_case_tester.py)
+- [x] Implement Playwright automation bindings in [`src/tiers/tier3_execution/mode_b_docker/visual/browser.py`](src/tiers/tier3_execution/mode_b_docker/visual/browser.py)
+- [x] Implement OpenCV-based visual parsing in [`src/tiers/tier3_execution/mode_b_docker/visual/vision.py`](src/tiers/tier3_execution/mode_b_docker/visual/vision.py)
+- [x] Add execution-mode tests under [`tests/test_tiers/`](tests/test_tiers/)
 
 ## Phase 3: Orchestration, quality oversight, and routing
 
