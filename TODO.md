@@ -46,18 +46,18 @@ This checklist is ordered by implementation phase and prioritized so the foundat
 
 **Goal:** build the hierarchical agent flow and quality gates.
 
-- [ ] Implement the Tier 1 supervisor graph in [`src/tiers/tier1_supervisor/graph.py`](src/tiers/tier1_supervisor/graph.py)
-- [ ] Define global supervisor state in [`src/tiers/tier1_supervisor/state.py`](src/tiers/tier1_supervisor/state.py)
-- [ ] Implement fast-path routing logic in [`src/tiers/tier1_supervisor/router.py`](src/tiers/tier1_supervisor/router.py)
-- [ ] Implement Tier 2 sub-graphs in [`src/tiers/tier2_subparent/subgraphs.py`](src/tiers/tier2_subparent/subgraphs.py)
-- [ ] Implement Tier 2 success criteria and self-correction in [`src/tiers/tier2_subparent/evaluator.py`](src/tiers/tier2_subparent/evaluator.py)
-- [ ] Add retry and iteration safeguards to all tier transitions
-- [ ] Ensure Tier 2 never performs raw execution, terminal work, or browser interaction directly
+- [x] Implement the Tier 1 supervisor graph in [`src/tiers/tier1_supervisor/graph.py`](src/tiers/tier1_supervisor/graph.py)
+- [x] Define global supervisor state in [`src/tiers/tier1_supervisor/state.py`](src/tiers/tier1_supervisor/state.py)
+- [x] Implement fast-path routing logic in [`src/tiers/tier1_supervisor/router.py`](src/tiers/tier1_supervisor/router.py)
+- [x] Implement Tier 2 sub-graphs in [`src/tiers/tier2_subparent/subgraphs.py`](src/tiers/tier2_subparent/subgraphs.py)
+- [x] Implement Tier 2 success criteria and self-correction in [`src/tiers/tier2_subparent/evaluator.py`](src/tiers/tier2_subparent/evaluator.py)
+- [x] Add retry and iteration safeguards to all tier transitions
+- [x] Ensure Tier 2 never performs raw execution, terminal work, or browser interaction directly
 - [ ] Add orchestration tests for:
-  - [ ] hand-off validation
-  - [ ] tier routing
-  - [ ] fast-path bypasses
-  - [ ] approval escalation
+  - [x] hand-off validation
+  - [x] tier routing
+  - [x] fast-path bypasses
+  - [x] approval escalation
 
 ## Phase 4: API gateway, ingestion, and observability
 
