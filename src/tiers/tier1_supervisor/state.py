@@ -31,6 +31,8 @@ class GlobalSupervisorState(TypedDict):
     approval_required: bool
     approval_granted: bool
     provider_name: str
+    strong_model: str
+    tier3_model: str | None
     plan: str
     summary: ExecutionSummary | None
     error: str | None
@@ -42,6 +44,7 @@ def create_initial_state(
     description: str,
     requested_by: str,
     provider_name: str = "anthropic",
+    strong_model: str = "",
     max_iterations: int = 3,
     max_retries: int = 2,
 ) -> GlobalSupervisorState:
@@ -65,6 +68,8 @@ def create_initial_state(
         "approval_required": False,
         "approval_granted": False,
         "provider_name": provider_name,
+        "strong_model": strong_model,
+        "tier3_model": None,
         "plan": "",
         "summary": None,
         "error": None,
