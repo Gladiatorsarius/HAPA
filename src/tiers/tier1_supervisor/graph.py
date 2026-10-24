@@ -8,8 +8,9 @@ from typing import Literal
 from langgraph.graph import END, START, StateGraph
 
 from src.core.schemas import TaskLifecycle, Tier
+from src.core.settings import settings
 from src.llm.providers import LLMMessage, LLMProvider
-from src.tiers.tier2_subparent.subgraphs import build_tier2_graph
+from src.tiers.tier2_subparent.model_policy import apply_tier3_model
 
 from .router import RouteTarget, route_task
 from .safeguards import begin_iteration
@@ -42,12 +43,29 @@ def _plan_with_provider(state: GlobalSupervisorState, provider: LLMProvider | No
 
 
 def _tier2(state: GlobalSupervisorState) -> GlobalSupervisorState:
-    record_handoff(state, destination_tier=Tier.TIER_2, payload={"description": state["metadata"].description})
+    apply_tier3_model(state, settings.llm.tier3_models)
+    record_handoff(
+        state,
+        destination_tier=Tier.TIER_2,
+        payload={
+            "description": state["metadata"].description,
+            "tier3_model": state["tier3_model"],
+        },
+    )
     return state
 
 
 def _tier3(state: GlobalSupervisorState) -> GlobalSupervisorState:
-    record_handoff(state, destination_tier=Tier.TIER_3, payload={"description": state["metadata"].description})
+    if not state["tier3_model"]:
+        apply_tier3_model(state, settings.llm.tier3_models)
+    record_handoff(
+        state,
+        destination_tier=Tier.TIER_3,
+        payload={
+            "description": state["metadata"].description,
+            "model": state["tier3_model"],
+        },
+    )
     return state
 
 
@@ -63,6 +81,9 @@ def build_supervisor_graph(provider: LLMProvider | None = None):
     """Compile the supervisor graph with an optional configured planner."""
 
     def plan(state: GlobalSupervisorState) -> GlobalSupervisorState:
+        if provider is not None:
+            state["provider_name"] = provider.name.value
+            state["strong_model"] = provider.model
         state["plan"] = _plan_with_provider(state, provider)
         return state
 
