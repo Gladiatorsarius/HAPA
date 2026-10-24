@@ -9,7 +9,7 @@ import json
 import time
 from typing import Any
 
-from fastapi import HTTPException, Security, status
+from fastapi import HTTPException, Request, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from src.core.settings import AuthSettings
@@ -38,11 +38,11 @@ def decode_jwt(token: str, settings: AuthSettings) -> dict[str, Any]:
     return claims
 
 
-def require_scopes(settings: AuthSettings, *required: str):
-    def dependency(credentials: HTTPAuthorizationCredentials | None = Security(_bearer)) -> dict[str, Any]:
+def require_scopes(*required: str):
+    def dependency(request: Request, credentials: HTTPAuthorizationCredentials | None = Security(_bearer)) -> dict[str, Any]:
         if credentials is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bearer token required")
-        claims = decode_jwt(credentials.credentials, settings)
+        claims = decode_jwt(credentials.credentials, request.app.state.settings.auth)
         scopes = set(claims.get("scope", "").split())
         if not set(required).issubset(scopes):
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Required scope is missing")
