@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from src.core.quality_gates import validate_test_report
 from src.core.schemas import TaskLifecycle, TestOutcome, TestReport
 from src.tiers.tier1_supervisor.state import GlobalSupervisorState
 
@@ -28,6 +29,7 @@ def evaluate_report(
     retry_count: int,
     max_retries: int,
 ) -> EvaluationResult:
+    report = validate_test_report(report)
     if retry_count < 0 or max_retries < 0:
         raise ValueError("retry counts cannot be negative")
     if retry_count > max_retries:

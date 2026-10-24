@@ -90,3 +90,13 @@ class SchemaTests(TestCase):
             {finding.persona for finding in report.review_findings},
             {ReviewPersona.SECURITY_AUDITOR, ReviewPersona.PERFORMANCE_OPTIMIZER},
         )
+
+    def test_test_report_rejects_incomplete_machine_counts(self) -> None:
+        with self.assertRaisesRegex(ValidationError, "must equal total_tests"):
+            TestReport(
+                suite_name="quality gates",
+                outcome=TestOutcome.PASSED,
+                total_tests=2,
+                passed_tests=1,
+                generated_at=datetime.now(timezone.utc),
+            )

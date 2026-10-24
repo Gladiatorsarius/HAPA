@@ -10,6 +10,7 @@ from pathlib import Path
 from git import Repo
 from git.exc import BadName, InvalidGitRepositoryError, NoSuchPathError
 from git.objects.commit import Commit
+from src.core.quality_gates import validate_code_diff
 from src.core.schemas import CodeDiffPayload, DiffKind, WorkspaceFileDelta
 
 
@@ -69,13 +70,15 @@ class GitWorkspaceHandler:
                 f"No changes found in workspace: {self.workspace}"
             )
 
-        return CodeDiffPayload(
-            repository=str(self.workspace),
-            base_revision=base_commit.hexsha,
-            head_revision=self.repository.head.commit.hexsha,
-            files=deltas,
-            unified_diff=self._combined_patch(deltas),
-            generated_at=datetime.now(timezone.utc),
+        return validate_code_diff(
+            CodeDiffPayload(
+                repository=str(self.workspace),
+                base_revision=base_commit.hexsha,
+                head_revision=self.repository.head.commit.hexsha,
+                files=deltas,
+                unified_diff=self._combined_patch(deltas),
+                generated_at=datetime.now(timezone.utc),
+            )
         )
 
     def close(self) -> None:

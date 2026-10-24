@@ -221,8 +221,8 @@ class TestReport(SchemaModel):
     @model_validator(mode="after")
     def validate_counts(self) -> TestReport:
         counted = self.passed_tests + self.failed_tests + self.skipped_tests
-        if counted > self.total_tests:
-            raise ValueError("passed, failed, and skipped tests cannot exceed total_tests")
+        if counted != self.total_tests:
+            raise ValueError("passed, failed, and skipped tests must equal total_tests")
         if self.outcome == TestOutcome.PASSED and self.failed_tests:
             raise ValueError("a PASSED report cannot contain failed tests")
         return self
