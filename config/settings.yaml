@@ -6,6 +6,25 @@ api:
   host: 0.0.0.0
   port: 8000
   log_level: INFO
+  public_base_url: http://localhost:8000
+auth:
+  issuer_url: https://localhost/
+  audience: hapa-api
+  jwt_secret: development-only-change-me
+  required_scopes:
+    - hapa:read
+    - hapa:write
+    - hapa:approve
+storage:
+  database_url: sqlite:///artifacts/hapa.db
+telemetry:
+  event_retention_seconds: 86400
+  sse_keepalive_seconds: 15
+integrations:
+  discord_enabled: false
+  discord_webhook_secret: ""
+  telegram_enabled: false
+  telegram_webhook_secret: ""
 temporal:
   target: localhost:7233
   namespace: hapa

@@ -15,6 +15,38 @@ class ApiSettings(SchemaModel):
     host: NonEmptyText = "0.0.0.0"
     port: int = 8000
     log_level: NonEmptyText = "INFO"
+    public_base_url: NonEmptyText = "http://localhost:8000"
+
+
+class AuthSettings(SchemaModel):
+    """JWT validation settings for protected API routes."""
+
+    issuer_url: NonEmptyText = "https://localhost/"
+    audience: NonEmptyText = "hapa-api"
+    jwt_secret: NonEmptyText = "development-only-change-me"
+    required_scopes: list[NonEmptyText] = Field(default_factory=lambda: ["hapa:read", "hapa:write", "hapa:approve"])
+
+
+class StorageSettings(SchemaModel):
+    """Durable local or remote database configuration."""
+
+    database_url: NonEmptyText = "sqlite:///artifacts/hapa.db"
+
+
+class TelemetrySettings(SchemaModel):
+    """Retention and keepalive behavior for telemetry consumers."""
+
+    event_retention_seconds: int = 86400
+    sse_keepalive_seconds: int = 15
+
+
+class IntegrationSettings(SchemaModel):
+    """Webhook integration toggles and shared secrets."""
+
+    discord_enabled: bool = False
+    discord_webhook_secret: str = ""
+    telegram_enabled: bool = False
+    telegram_webhook_secret: str = ""
 
 
 class TemporalSettings(SchemaModel):
@@ -64,6 +96,10 @@ class AppSettings(SchemaModel):
     debug: bool = False
     workspace_root: NonEmptyText = "."
     api: ApiSettings = ApiSettings()
+    auth: AuthSettings = AuthSettings()
+    storage: StorageSettings = StorageSettings()
+    telemetry: TelemetrySettings = TelemetrySettings()
+    integrations: IntegrationSettings = IntegrationSettings()
     temporal: TemporalSettings = TemporalSettings()
     docker: DockerSettings = DockerSettings()
     browser: BrowserSettings = BrowserSettings()
@@ -97,10 +133,14 @@ def load_settings(path: str | Path | None = None) -> AppSettings:
 settings = load_settings()
 __all__ = [
     "ApiSettings",
+    "AuthSettings",
     "AppSettings",
     "BrowserSettings",
     "DockerSettings",
     "LLMSettings",
+    "StorageSettings",
+    "TelemetrySettings",
+    "IntegrationSettings",
     "TemporalSettings",
     "load_settings",
     "settings",
