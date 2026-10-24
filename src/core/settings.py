@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
-
 import yaml
+from pydantic import Field, field_validator
 
 from src.core.schemas import NonEmptyText, SchemaModel
 
@@ -42,6 +41,21 @@ class BrowserSettings(SchemaModel):
     screenshot_dir: NonEmptyText = "artifacts/screenshots"
 
 
+class LLMSettings(SchemaModel):
+    """Single active provider and tier-specific model policy."""
+
+    active_provider: NonEmptyText = "anthropic"
+    strong_model: NonEmptyText
+    tier3_models: list[NonEmptyText] = Field(min_length=1)
+
+    @field_validator("tier3_models")
+    @classmethod
+    def reject_duplicate_models(cls, models: list[str]) -> list[str]:
+        if len(models) != len(set(models)):
+            raise ValueError("tier3_models must not contain duplicates")
+        return models
+
+
 class AppSettings(SchemaModel):
     """Top-level settings for the HAPA application bootstrap."""
 
@@ -53,6 +67,7 @@ class AppSettings(SchemaModel):
     temporal: TemporalSettings = TemporalSettings()
     docker: DockerSettings = DockerSettings()
     browser: BrowserSettings = BrowserSettings()
+    llm: LLMSettings
 
     @classmethod
     def from_yaml(cls, path: str | Path | None = None) -> AppSettings:
@@ -80,4 +95,13 @@ def load_settings(path: str | Path | None = None) -> AppSettings:
 
 
 settings = load_settings()
-__all__ = ["ApiSettings", "AppSettings", "BrowserSettings", "DockerSettings", "TemporalSettings", "load_settings", "settings"]
+__all__ = [
+    "ApiSettings",
+    "AppSettings",
+    "BrowserSettings",
+    "DockerSettings",
+    "LLMSettings",
+    "TemporalSettings",
+    "load_settings",
+    "settings",
+]

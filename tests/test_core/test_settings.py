@@ -14,6 +14,9 @@ class SettingsTests(TestCase):
         self.assertEqual(settings.api.port, 8000)
         self.assertEqual(settings.temporal.namespace, "hapa")
         self.assertTrue(settings.docker.use_rootless)
+        self.assertEqual(settings.llm.active_provider, "anthropic")
+        self.assertEqual(settings.llm.strong_model, "claude-3-5-sonnet-latest")
+        self.assertIn("gpt-4o-mini", settings.llm.tier3_models)
 
     def test_app_settings_requires_name(self) -> None:
         with self.assertRaises(ValueError):
@@ -41,3 +44,13 @@ class SettingsTests(TestCase):
                 AppSettings.from_yaml(yaml_path)
         finally:
             yaml_path.unlink(missing_ok=True)
+
+    def test_llm_settings_reject_duplicate_tier_three_models(self) -> None:
+        with self.assertRaises(ValueError):
+            AppSettings.model_validate({
+                "name": "HAPA",
+                "llm": {
+                    "strong_model": "strong",
+                    "tier3_models": ["small", "small"],
+                },
+            })
