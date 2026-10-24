@@ -29,7 +29,7 @@ class ApiStore:
             );
             CREATE TABLE IF NOT EXISTS approvals (
                 approval_id TEXT PRIMARY KEY, task_id TEXT NOT NULL, state TEXT NOT NULL,
-                created_at TEXT NOT NULL, decided_at TEXT
+                comment TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, decided_at TEXT
             );
             CREATE TABLE IF NOT EXISTS events (
                 event_id INTEGER PRIMARY KEY AUTOINCREMENT, task_id TEXT NOT NULL,
@@ -37,6 +37,14 @@ class ApiStore:
             );
             """
         )
+        approval_columns = {
+            row["name"]
+            for row in self._connection.execute("PRAGMA table_info(approvals)").fetchall()
+        }
+        if "comment" not in approval_columns:
+            self._connection.execute(
+                "ALTER TABLE approvals ADD COLUMN comment TEXT NOT NULL DEFAULT ''"
+            )
         self._connection.commit()
 
     def close(self) -> None:
@@ -86,18 +94,25 @@ class ApiStore:
     def add_approval(self, task_id: UUID, approval_id: UUID) -> None:
         now = self._now()
         with self._lock:
-            self._connection.execute("INSERT INTO approvals VALUES (?, ?, 'PENDING', ?, NULL)", (str(approval_id), str(task_id), now))
+            self._connection.execute(
+                "INSERT INTO approvals (approval_id, task_id, state, comment, created_at, decided_at) "
+                "VALUES (?, ?, 'PENDING', '', ?, NULL)",
+                (str(approval_id), str(task_id), now),
+            )
             self._connection.commit()
 
     def list_approvals(self, pending_only: bool = True) -> list[dict[str, Any]]:
         query = "SELECT * FROM approvals" + (" WHERE state='PENDING'" if pending_only else "")
         return [dict(row) for row in self._connection.execute(query).fetchall()]
 
-    def decide_approval(self, approval_id: UUID, state: str) -> dict[str, Any]:
+    def decide_approval(self, approval_id: UUID, state: str, comment: str = "") -> dict[str, Any]:
+        if state not in {"APPROVED", "REJECTED"}:
+            raise ValueError("Approval state must be APPROVED or REJECTED")
         with self._lock:
             cursor = self._connection.execute(
-                "UPDATE approvals SET state=?, decided_at=? WHERE approval_id=? AND state='PENDING'",
-                (state, self._now(), str(approval_id)),
+                "UPDATE approvals SET state=?, comment=?, decided_at=? "
+                "WHERE approval_id=? AND state='PENDING'",
+                (state, comment, self._now(), str(approval_id)),
             )
             if cursor.rowcount != 1:
                 raise KeyError(str(approval_id))

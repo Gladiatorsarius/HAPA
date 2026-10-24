@@ -43,3 +43,22 @@ class FoundationTests(TestCase):
         signing_input = f"{enc(header)}.{enc(payload)}"
         signature = base64.urlsafe_b64encode(hmac.new(b"secret", signing_input.encode(), hashlib.sha256).digest()).rstrip(b"=").decode()
         self.assertEqual(decode_jwt(f"{signing_input}.{signature}", settings)["scope"], "hapa:read")
+
+    def test_approval_decision_requires_valid_state_and_preserves_comment(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = ApiStore(f"sqlite:///{directory}/hapa.db")
+            task_id = create_initial_state(
+                title="Deploy",
+                description="Deploy",
+                requested_by="test",
+            )["metadata"].task_id
+            approval_id = task_id
+            store.add_approval(task_id, approval_id)
+
+            with self.assertRaises(ValueError):
+                store.decide_approval(approval_id, "RUNNING")
+
+            approval = store.decide_approval(approval_id, "REJECTED", "Not ready")
+            self.assertEqual(approval["comment"], "Not ready")
+            self.assertEqual(approval["state"], "REJECTED")
+            store.close()

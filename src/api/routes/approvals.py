@@ -15,11 +15,30 @@ def list_approvals(request: Request, _: dict = Depends(require_scopes("hapa:appr
     return request.app.state.store.list_approvals()
 
 
-async def _decide(approval_id: UUID, request: Request, state: str, _: ApprovalDecision, __: dict) -> TaskResponse:
+async def _decide(
+    approval_id: UUID,
+    request: Request,
+    state: str,
+    body: ApprovalDecision,
+    __: dict,
+) -> TaskResponse:
     try:
-        approval = request.app.state.store.decide_approval(approval_id, state)
-        task = request.app.state.store.update_task(UUID(approval["task_id"]), state=TaskLifecycle.RUNNING.value, approval_required=False)
-        event = request.app.state.store.add_event(UUID(approval["task_id"]), f"approval.{state.lower()}", {"approval_id": str(approval_id)})
+        approval = request.app.state.store.decide_approval(approval_id, state, body.comment)
+        task_state = (
+            TaskLifecycle.RUNNING.value
+            if state == "APPROVED"
+            else TaskLifecycle.CANCELLED.value
+        )
+        task = request.app.state.store.update_task(
+            UUID(approval["task_id"]),
+            state=task_state,
+            approval_required=False,
+        )
+        event = request.app.state.store.add_event(
+            UUID(approval["task_id"]),
+            f"approval.{state.lower()}",
+            {"approval_id": str(approval_id), "comment": approval["comment"]},
+        )
         await request.app.state.telemetry.publish(event)
         return TaskResponse.model_validate(task)
     except KeyError as exc:
