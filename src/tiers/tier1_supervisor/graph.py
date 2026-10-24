@@ -12,10 +12,12 @@ from src.llm.providers import LLMMessage, LLMProvider
 from src.tiers.tier2_subparent.subgraphs import build_tier2_graph
 
 from .router import RouteTarget, route_task
+from .safeguards import begin_iteration
 from .state import GlobalSupervisorState, record_handoff
 
 
 def _route(state: GlobalSupervisorState) -> GlobalSupervisorState:
+    begin_iteration(state)
     route_task(state)
     return state
 
