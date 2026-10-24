@@ -26,7 +26,12 @@ docker compose up --build
 
 ## API usage
 
-All `/api/v1` routes except health require an OAuth/OIDC bearer token. Tokens
+For the complete HTTP, SSE, WebSocket, Discord webhook, and Telegram webhook
+reference, see [`api.md`](api.md).
+
+Task, chat, approval, and event routes under `/api/v1` require an OAuth/OIDC
+bearer token. The aggregate telemetry endpoint is public, and the telemetry
+WebSocket currently does not validate bearer tokens. Tokens
 must contain the configured issuer and audience claims plus one of:
 `hapa:read`, `hapa:write`, or `hapa:approve`.
 
