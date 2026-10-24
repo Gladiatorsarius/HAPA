@@ -7,6 +7,7 @@ from .providers import (
     OpenAICompatibleProvider,
     ProviderConfigurationError,
     ProviderName,
+    create_configured_provider,
     create_provider,
 )
 
@@ -17,5 +18,6 @@ __all__ = [
     "OpenAICompatibleProvider",
     "ProviderConfigurationError",
     "ProviderName",
+    "create_configured_provider",
     "create_provider",
 ]

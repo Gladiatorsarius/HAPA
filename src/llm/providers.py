@@ -12,6 +12,8 @@ from urllib.request import Request, urlopen
 
 from dotenv import load_dotenv
 
+from src.core.settings import AppSettings
+
 
 class ProviderName(StrEnum):
     OPENAI = "openai"
@@ -263,6 +265,44 @@ def create_provider(
     )
 
 
+def create_configured_provider(
+    settings: AppSettings,
+    *,
+    transport: Transport = _default_transport,
+    environ: Mapping[str, str] | None = None,
+) -> LLMProvider:
+    """Create the single active provider using the YAML-selected strong model."""
+
+    load_dotenv()
+    env = os.environ if environ is None else environ
+    provider_name = ProviderName(settings.llm.active_provider)
+    prefix = provider_name.value.upper()
+    api_key = env.get(f"{prefix}_API_KEY", "")
+    endpoint_defaults = {
+        ProviderName.OPENAI: "https://api.openai.com/v1",
+        ProviderName.ANTHROPIC: "https://api.anthropic.com",
+        ProviderName.GOOGLE: "https://generativelanguage.googleapis.com",
+        ProviderName.OPENROUTER: "https://openrouter.ai/api/v1",
+        ProviderName.GENERIC_OPENAI_COMPATIBLE: "",
+    }
+    endpoint = env.get(f"{prefix}_BASE_URL", endpoint_defaults[provider_name])
+    if provider_name == ProviderName.ANTHROPIC:
+        return AnthropicProvider(
+            api_key, endpoint, settings.llm.strong_model, transport=transport
+        )
+    if provider_name == ProviderName.GOOGLE:
+        return GeminiProvider(
+            api_key, endpoint, settings.llm.strong_model, transport=transport
+        )
+    return OpenAICompatibleProvider(
+        provider_name,
+        api_key,
+        endpoint,
+        settings.llm.strong_model,
+        transport=transport,
+    )
+
+
 __all__ = [
     "AnthropicProvider",
     "GeminiProvider",
@@ -272,5 +312,6 @@ __all__ = [
     "OpenAICompatibleProvider",
     "ProviderConfigurationError",
     "ProviderName",
+    "create_configured_provider",
     "create_provider",
 ]

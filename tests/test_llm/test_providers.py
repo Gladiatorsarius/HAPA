@@ -8,8 +8,10 @@ from src.llm.providers import (
     OpenAICompatibleProvider,
     ProviderConfigurationError,
     ProviderName,
+    create_configured_provider,
     create_provider,
 )
+from src.core.settings import AppSettings
 
 
 def transport_for(payload: dict[str, object]):
@@ -80,3 +82,21 @@ class ProviderTests(TestCase):
     def test_missing_model_is_explicit(self) -> None:
         with self.assertRaises(ProviderConfigurationError):
             create_provider("openai", environ={"OPENAI_API_KEY": "secret"})
+
+    def test_configured_provider_uses_yaml_strong_model(self) -> None:
+        settings = AppSettings.model_validate({
+            "name": "HAPA",
+            "llm": {
+                "active_provider": "openai",
+                "strong_model": "strong-model",
+                "tier3_models": ["small-model"],
+            },
+        })
+
+        provider = create_configured_provider(
+            settings,
+            environ={"OPENAI_API_KEY": "secret"},
+            transport=transport_for({"choices": [{"message": {"content": "ok"}}]}),
+        )
+
+        self.assertEqual(provider.model, "strong-model")
