@@ -8,7 +8,7 @@ from src.tiers.tier1_supervisor.state import create_initial_state
 
 class FakeProvider:
     name = ProviderName.ANTHROPIC
-    model = "test-model"
+    model = "claude-3-5-sonnet-latest"
 
     def complete(self, messages, *, temperature=0.0):
         return LLMResponse(
@@ -63,3 +63,10 @@ class SupervisorGraphTests(TestCase):
 
         self.assertTrue(result["approval_required"])
         self.assertEqual(result["status"].state.value, "BLOCKED_AT_HUMAN_GATE")
+
+    def test_graph_rejects_a_non_strong_provider_model(self) -> None:
+        class WeakProvider(FakeProvider):
+            model = "weak-model"
+
+        with self.assertRaises(ValueError):
+            build_supervisor_graph(WeakProvider())

@@ -80,6 +80,12 @@ def _approval(state: GlobalSupervisorState) -> GlobalSupervisorState:
 def build_supervisor_graph(provider: LLMProvider | None = None):
     """Compile the supervisor graph with an optional configured planner."""
 
+    if provider is not None and provider.model != settings.llm.strong_model:
+        raise ValueError(
+            "Tier 1 and Tier 2 require the configured strong model "
+            f"{settings.llm.strong_model!r}"
+        )
+
     def plan(state: GlobalSupervisorState) -> GlobalSupervisorState:
         if provider is not None:
             state["provider_name"] = provider.name.value
