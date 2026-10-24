@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 from src.core.settings import AppSettings, load_settings
 
 from .routes import approvals, chat, health, observability, tasks
+from src.integrations import discord_bot, telegram_bot
 from .store import ApiStore
 from .websocket import TelemetryBus
 
@@ -23,6 +23,8 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
     app.include_router(tasks.router)
     app.include_router(approvals.router)
     app.include_router(observability.router)
+    app.include_router(discord_bot.router)
+    app.include_router(telegram_bot.router)
 
     @app.websocket("/api/v1/ws/telemetry")
     async def telemetry_socket(websocket: WebSocket) -> None:

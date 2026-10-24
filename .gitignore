@@ -11,3 +11,6 @@ wheels/
 
 # Local credentials
 .env
+
+# Runtime artifacts
+artifacts/
