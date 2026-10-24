@@ -66,7 +66,7 @@ class EntrypointShellTests(TestCase):
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(result.stdout, "first argument|%s")
+            self.assertEqual(result.stdout, "first argument|")
             self.assertTrue(workspace.is_dir())
             self.assertTrue(snapshots.is_dir())
             self.assertTrue(screenshots.is_dir())
