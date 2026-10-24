@@ -53,7 +53,7 @@ This checklist is ordered by implementation phase and prioritized so the foundat
 - [x] Implement Tier 2 success criteria and self-correction in [`src/tiers/tier2_subparent/evaluator.py`](src/tiers/tier2_subparent/evaluator.py)
 - [x] Add retry and iteration safeguards to all tier transitions
 - [x] Ensure Tier 2 never performs raw execution, terminal work, or browser interaction directly
-- [ ] Add orchestration tests for:
+- [x] Add orchestration tests for:
   - [x] hand-off validation
   - [x] tier routing
   - [x] fast-path bypasses
@@ -63,18 +63,18 @@ This checklist is ordered by implementation phase and prioritized so the foundat
 
 **Goal:** expose the external interface and real-time telemetry surface.
 
-- [ ] Create the FastAPI app factory in [`src/api/app.py`](src/api/app.py)
-- [ ] Add the main Uvicorn entrypoint in [`src/main.py`](src/main.py)
-- [ ] Implement chat ingress in [`src/api/routes/chat.py`](src/api/routes/chat.py)
-- [ ] Implement task scheduling and active-task endpoints in [`src/api/routes/tasks.py`](src/api/routes/tasks.py)
-- [ ] Implement human approval endpoints in [`src/api/routes/approvals.py`](src/api/routes/approvals.py)
-- [ ] Implement observability streaming in [`src/api/routes/observability.py`](src/api/routes/observability.py)
-- [ ] Implement health and telemetry endpoints in [`src/api/routes/health.py`](src/api/routes/health.py)
-- [ ] Implement the websocket telemetry bus in [`src/api/websocket.py`](src/api/websocket.py)
-- [ ] Add Discord ingress in [`src/integrations/discord_bot.py`](src/integrations/discord_bot.py)
-- [ ] Add Telegram ingress in [`src/integrations/telegram_bot.py`](src/integrations/telegram_bot.py)
-- [ ] Add API contract tests under [`tests/test_api/`](tests/test_api/)
-- [ ] Verify the container startup path in [`Dockerfile`](Dockerfile) and [`docker-compose.yml`](docker-compose.yml)
+- [x] Create the FastAPI app factory in [`src/api/app.py`](src/api/app.py)
+- [x] Add the main Uvicorn entrypoint in [`src/main.py`](src/main.py)
+- [x] Implement chat ingress in [`src/api/routes/chat.py`](src/api/routes/chat.py)
+- [x] Implement task scheduling and active-task endpoints in [`src/api/routes/tasks.py`](src/api/routes/tasks.py)
+- [x] Implement human approval endpoints in [`src/api/routes/approvals.py`](src/api/routes/approvals.py)
+- [x] Implement observability streaming in [`src/api/routes/observability.py`](src/api/routes/observability.py)
+- [x] Implement health and telemetry endpoints in [`src/api/routes/health.py`](src/api/routes/health.py)
+- [x] Implement the websocket telemetry bus in [`src/api/websocket.py`](src/api/websocket.py)
+- [x] Add Discord ingress in [`src/integrations/discord_bot.py`](src/integrations/discord_bot.py)
+- [x] Add Telegram ingress in [`src/integrations/telegram_bot.py`](src/integrations/telegram_bot.py)
+- [x] Add API contract tests under [`tests/test_api/`](tests/test_api/)
+- [x] Verify the container startup path in [`Dockerfile`](Dockerfile) and [`docker-compose.yml`](docker-compose.yml)
 
 ## Cross-phase quality gates
 

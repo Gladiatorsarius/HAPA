@@ -1,0 +1,19 @@
+services:
+  hapa:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      HAPA_API_HOST: 0.0.0.0
+      HAPA_API_PORT: 8000
+      HAPA_WORKSPACE_ROOT: /data/workspace
+    volumes:
+      - hapa-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/live')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  hapa-data:
