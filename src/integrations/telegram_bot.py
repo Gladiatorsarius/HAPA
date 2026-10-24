@@ -20,4 +20,8 @@ async def receive(request: Request, payload: dict, x_hapa_webhook_secret: str | 
     sender = message.get("from", {}).get("username", "telegram")
     if not isinstance(text, str) or not text.strip():
         raise HTTPException(422, "Telegram payload must contain message.text")
-    return await _create(request, ChatMessageRequest(message=text, requested_by=f"telegram:{sender}", title="Telegram message"))
+    return await _create(
+        request,
+        ChatMessageRequest(message=text, requested_by=f"telegram:{sender}", title="Telegram message"),
+        source="telegram",
+    )

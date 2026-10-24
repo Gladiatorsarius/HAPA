@@ -14,6 +14,7 @@ from src.core.schemas import (
     TaskMetadata,
     TaskStatus,
     Tier,
+    ProvenanceMetadata,
 )
 
 
@@ -43,6 +44,7 @@ def create_initial_state(
     title: str,
     description: str,
     requested_by: str,
+    source: str = "api",
     provider_name: str = "anthropic",
     strong_model: str = "",
     max_iterations: int = 3,
@@ -53,7 +55,12 @@ def create_initial_state(
     if max_retries < 0:
         raise ValueError("max_retries cannot be negative")
     now = datetime.now(timezone.utc)
-    metadata = TaskMetadata(title=title, description=description, created_at=now)
+    metadata = TaskMetadata(
+        title=title,
+        description=description,
+        created_at=now,
+        provenance=ProvenanceMetadata(source=source, actor=requested_by, received_at=now),
+    )
     return {
         "metadata": metadata,
         "lineage": ExecutionLineage(root_task_id=metadata.task_id, requested_by=requested_by),

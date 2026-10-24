@@ -15,6 +15,8 @@ class SupervisorStateTests(TestCase):
         )
 
         self.assertEqual(state["lineage"].root_task_id, state["metadata"].task_id)
+        self.assertEqual(state["metadata"].provenance.source, "api")
+        self.assertEqual(state["metadata"].provenance.actor, "test")
         self.assertEqual(state["current_tier"], Tier.TIER_1)
         self.assertEqual(state["max_iterations"], 3)
 

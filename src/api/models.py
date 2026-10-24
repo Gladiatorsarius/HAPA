@@ -8,7 +8,13 @@ from uuid import UUID
 
 from pydantic import Field
 
-from src.core.schemas import NonEmptyText, SchemaModel, TaskLifecycle
+from src.core.schemas import (
+    ExecutionLineage,
+    NonEmptyText,
+    ProvenanceMetadata,
+    SchemaModel,
+    TaskLifecycle,
+)
 
 
 class TaskRequest(SchemaModel):
@@ -36,7 +42,8 @@ class TaskResponse(SchemaModel):
     description: str = ""
     state: TaskLifecycle
     approval_required: bool
-    lineage: dict[str, Any]
+    lineage: ExecutionLineage
+    provenance: ProvenanceMetadata
     created_at: datetime
     updated_at: datetime
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum, IntEnum, StrEnum
 from typing import Annotated, Any
 from uuid import UUID, uuid4
@@ -73,6 +73,14 @@ NonNegativeInt = Annotated[int, Field(ge=0)]
 Percentage = Annotated[float, Field(ge=0, le=100)]
 
 
+class ProvenanceMetadata(SchemaModel):
+    """Source and actor metadata retained for every task request."""
+
+    source: NonEmptyText = "internal"
+    actor: NonEmptyText = "system"
+    received_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
 class TaskMetadata(SchemaModel):
     """Identity and descriptive metadata for a task."""
 
@@ -82,6 +90,7 @@ class TaskMetadata(SchemaModel):
     created_at: datetime
     deadline: datetime | None = None
     labels: list[NonEmptyText] = Field(default_factory=list)
+    provenance: ProvenanceMetadata = Field(default_factory=ProvenanceMetadata)
 
 
 class ExecutionLineage(SchemaModel):

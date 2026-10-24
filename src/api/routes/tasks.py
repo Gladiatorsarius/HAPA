@@ -12,14 +12,25 @@ from ..models import TaskRequest, TaskResponse
 router = APIRouter(prefix="/api/v1/tasks", tags=["tasks"])
 
 
-async def _create(request: Request, body: TaskRequest) -> TaskResponse:
-    state = create_initial_state(title=body.title, description=body.description, requested_by=body.requested_by)
+async def _create(request: Request, body: TaskRequest, *, source: str = "api") -> TaskResponse:
+    state = create_initial_state(
+        title=body.title,
+        description=body.description,
+        requested_by=body.requested_by,
+        source=source,
+    )
     state["metadata"] = state["metadata"].model_copy(update={"labels": body.labels})
     result = build_supervisor_graph().invoke(state)
     approval_required = result["approval_required"]
     lifecycle = result["status"].state
     task = request.app.state.store.create_task(
-        {"task_id": result["metadata"].task_id, "title": body.title, "description": body.description, "lineage": result["lineage"].model_dump(mode="json")},
+        {
+            "task_id": result["metadata"].task_id,
+            "title": body.title,
+            "description": body.description,
+            "lineage": result["lineage"].model_dump(mode="json"),
+            "provenance": result["metadata"].provenance.model_dump(mode="json"),
+        },
         lifecycle.value,
         approval_required,
     )
@@ -30,7 +41,13 @@ async def _create(request: Request, body: TaskRequest) -> TaskResponse:
         request.app.state.store.add_approval(result["metadata"].task_id, approval_id)
         approval_event = request.app.state.store.add_event(result["metadata"].task_id, "approval.required", {"approval_id": str(approval_id)})
         await request.app.state.telemetry.publish(approval_event)
-    return TaskResponse.model_validate(task | {"lineage": result["lineage"].model_dump(mode="json")})
+    return TaskResponse.model_validate(
+        task
+        | {
+            "lineage": result["lineage"].model_dump(mode="json"),
+            "provenance": result["metadata"].provenance.model_dump(mode="json"),
+        }
+    )
 
 
 @router.post("", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)

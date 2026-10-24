@@ -6,6 +6,7 @@ from pydantic import ValidationError
 
 from src.core.schemas import (
     ExecutionLineage,
+    ProvenanceMetadata,
     ReviewFinding,
     ReviewPersona,
     TaskHandOff,
@@ -34,6 +35,17 @@ def make_handoff() -> TaskHandOff:
 
 
 class SchemaTests(TestCase):
+    def test_task_metadata_carries_provenance(self) -> None:
+        now = datetime.now(timezone.utc)
+        metadata = TaskMetadata(
+            title="Implement schemas",
+            created_at=now,
+            provenance=ProvenanceMetadata(source="discord", actor="discord:alice"),
+        )
+
+        self.assertEqual(metadata.provenance.source, "discord")
+        self.assertEqual(metadata.provenance.actor, "discord:alice")
+
     def test_handoff_round_trips_through_json(self) -> None:
         handoff = make_handoff()
 

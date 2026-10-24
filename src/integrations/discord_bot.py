@@ -27,4 +27,8 @@ async def receive(request: Request, payload: dict, x_hapa_webhook_secret: str | 
     author = payload.get("author", {}).get("username", "discord")
     if not isinstance(content, str) or not content.strip():
         raise HTTPException(422, "Discord payload must contain content")
-    return await _create(request, ChatMessageRequest(message=content, requested_by=f"discord:{author}", title="Discord message"))
+    return await _create(
+        request,
+        ChatMessageRequest(message=content, requested_by=f"discord:{author}", title="Discord message"),
+        source="discord",
+    )
