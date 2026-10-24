@@ -78,9 +78,9 @@ This checklist is ordered by implementation phase and prioritized so the foundat
 
 ## Cross-phase quality gates
 
-- [ ] Keep all cross-tier payloads validated by Pydantic models
-- [ ] Ensure every task carries lineage and provenance metadata
-- [ ] Protect irreversible actions with explicit human approval
-- [ ] Keep generated diffs and test reports structured and machine-readable
-- [ ] Expand the test suite whenever a new tier, route, or persistence behavior is added
-- [ ] Update [`README.md`](README.md) once the public runtime surface stabilizes
+- [x] Keep all cross-tier payloads validated by Pydantic models
+- [x] Ensure every task carries lineage and provenance metadata
+- [x] Protect irreversible actions with explicit human approval
+- [x] Keep generated diffs and test reports structured and machine-readable
+- [x] Expand the test suite whenever a new tier, route, or persistence behavior is added
+- [x] Update [`README.md`](README.md) once the public runtime surface stabilizes

@@ -43,7 +43,14 @@ Applications can poll `GET /api/v1/tasks/{task_id}` or consume
 `GET /api/v1/tasks/{task_id}/events/stream` (SSE). Interactive clients can
 subscribe to `WS /api/v1/ws/telemetry?task_id={task_id}`. Approval-gated tasks
 appear at `GET /api/v1/approvals` and require an explicit approve or reject
-request with the `hapa:approve` scope.
+request with the `hapa:approve` scope. Every task response includes its
+lineage and provenance (`source`, `actor`, and `received_at`) so requests can
+be traced across tiers. Rejected approvals cancel the task and preserve the
+reviewer's comment.
+
+Quality gates validate all cross-tier hand-offs with strict Pydantic models.
+Workspace diffs and test reports are JSON-round-trippable structured
+artifacts; incomplete test counts or malformed artifacts block progression.
 
 `GET /health/live` is a public liveness check; `GET /health/ready` checks the
 configured durable store. Discord and Telegram webhook adapters are disabled
