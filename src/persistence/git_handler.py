@@ -209,11 +209,8 @@ class GitWorkspaceHandler:
         file_path = self.workspace / Path(relative_path)
         if not file_path.is_file():
             return None
-        digest = hashlib.sha256()
         with file_path.open("rb") as file_handle:
-            for chunk in iter(lambda: file_handle.read(1024 * 1024), b""):
-                digest.update(chunk)
-        return digest.hexdigest()
+            return hashlib.file_digest(file_handle, "sha256").hexdigest()
 
     def _infer_worktree_renames(
         self,
@@ -274,8 +271,7 @@ class GitWorkspaceHandler:
 
     @staticmethod
     def _combined_patch(deltas: list[WorkspaceFileDelta]) -> str | None:
-        patches = [delta.patch for delta in deltas if delta.patch]
-        return "\n".join(patches) or None
+        return "\n".join(delta.patch for delta in deltas if delta.patch) or None
 
 
 __all__ = [

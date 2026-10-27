@@ -104,11 +104,7 @@ class WorkspaceManager:
         return Path(mkdtemp(prefix="workspace-", dir=self.workspace_root))
 
     def _within_root(self, path: Path) -> bool:
-        try:
-            path.relative_to(self.workspace_root)
-        except ValueError:
-            return False
-        return True
+        return path.is_relative_to(self.workspace_root)
 
 
 __all__ = ["IsolatedWorkspace", "WorkspaceIsolationError", "WorkspaceManager"]

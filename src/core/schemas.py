@@ -60,12 +60,7 @@ class ReviewPersona(StrEnum):
 class SchemaModel(BaseModel):
     """Common strict configuration for all wire models."""
 
-    model_config = ConfigDict(
-        extra="forbid",
-        strict=True,
-        validate_assignment=True,
-        use_enum_values=False,
-    )
+    model_config = ConfigDict(extra="forbid", strict=True, validate_assignment=True)
 
 
 NonEmptyText = Annotated[str, Field(min_length=1)]

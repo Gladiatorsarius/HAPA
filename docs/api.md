@@ -6,12 +6,11 @@ realtime task telemetry. It exposes:
 - a JSON-over-HTTP API under `/api/v1`;
 - an HTTP Server-Sent Events (SSE) stream for task events;
 - a WebSocket telemetry feed;
-- inbound Discord and Telegram webhook adapters.
+- asynchronous chat acknowledgements and completion callbacks;
+- durable recurring schedule management.
 
-The Discord and Telegram adapters are intentionally thin. They do not call the
-Discord or Telegram APIs themselves; they accept provider webhook payloads,
-extract a message, and submit it through the same task creation pipeline as
-the website API.
+Discord clients use the same authenticated chat contract as the website. There
+are no provider-specific Discord or Telegram webhook adapters.
 
 ## Running the API
 
@@ -235,8 +234,10 @@ updated `TaskResponse`.
 
 ### `POST /api/v1/chat/messages`
 
-Creates a task from a chat-style request and requires `hapa:write`. This is
-the website-friendly alternative to supplying `description` directly.
+Starts a conversation and requires `hapa:write`. The endpoint returns
+immediately with a Tier 1 acknowledgement; execution continues asynchronously.
+The conversation is identified by `chat_id`, while independent scheduled work
+continues to use `task_id`.
 
 Request:
 
@@ -245,13 +246,72 @@ Request:
   "message": "Investigate the failing checkout tests",
   "requested_by": "web-chat-user-123",
   "title": "Checkout investigation",
-  "labels": ["support"]
+  "labels": ["support"],
+  "callback_url": "https://example.test/hapa-events"
 }
 ```
 
 `message` and `requested_by` are required non-empty strings. `title` defaults
-to `Chat task`, and `labels` defaults to an empty array. The response is the
-same `TaskResponse` returned by task creation, with provenance source `api`.
+to `Chat task`, and `labels` defaults to an empty array. `callback_url` is
+optional and must use HTTP or HTTPS. The response is `202`:
+
+```json
+{
+  "chat_id": "2d7f5f50-f8a8-4c18-93f4-8e8c9df6c3a8",
+  "answer": "Tier 1 accepted 'Checkout investigation'. Execution will continue asynchronously.",
+  "state": "PENDING",
+  "follow_up_url": "/api/v1/tasks/2d7f5f50-f8a8-4c18-93f4-8e8c9df6c3a8/events/stream",
+  "events_url": "/api/v1/tasks/2d7f5f50-f8a8-4c18-93f4-8e8c9df6c3a8/events",
+  "callback_configured": true
+}
+```
+
+Completion is persisted in the event history and can be consumed through the
+HTTP events endpoint or SSE stream. If a callback URL is supplied, HAPA sends
+one best-effort `POST` request on completion with a versioned JSON envelope:
+
+```json
+{
+  "version": 1,
+  "task_id": "2d7f5f50-f8a8-4c18-93f4-8e8c9df6c3a8",
+  "state": "SUCCESS",
+  "answer": "Execution completed.",
+  "provenance": {"source": "api", "actor": "web-chat-user-123"}
+}
+```
+
+Callback failures are recorded as `callback.failed` events and are not
+silently swallowed. The callback endpoint is not authenticated by HAPA.
+
+### Recurring schedules
+
+`POST /api/v1/schedules` creates independent scheduled work and requires
+`hapa:write`. It supports either an interval (for example, `86400` seconds
+for every 24 hours) or a cron expression with an IANA timezone:
+
+```json
+{
+  "title": "Daily bug scan",
+  "description": "Find and report new bugs",
+  "requested_by": "website",
+  "schedule_type": "interval",
+  "interval_seconds": 86400,
+  "timezone": "Europe/Berlin",
+  "callback_url": "https://example.test/task-events"
+}
+```
+
+Use `"schedule_type": "cron"` with `cron_expression` instead of
+`interval_seconds` for cron schedules. Schedules return a durable
+`schedule_id`, `next_run_at`, and lifecycle `state`. Each firing creates an
+independent `task_id`; it does not create or attach to a `chat_id`.
+
+The schedule lifecycle routes are:
+
+- `GET /api/v1/schedules` (`hapa:read`)
+- `POST /api/v1/schedules/{schedule_id}/pause` (`hapa:write`)
+- `POST /api/v1/schedules/{schedule_id}/resume` (`hapa:write`)
+- `POST /api/v1/schedules/{schedule_id}/cancel` (`hapa:write`)
 
 ### `GET /api/v1/approvals`
 
@@ -395,127 +455,19 @@ Therefore, use durable event history to recover from gaps. The current
 endpoint does not authenticate the WebSocket handshake and does not replay
 historical events.
 
-## Discord webhook API
+## Client integrations
 
-### `POST /webhooks/discord`
-
-This endpoint accepts a Discord message-shaped JSON payload and creates a
-HAPA task. It is disabled by default and is not under `/api/v1`.
-
-Enable it in `config/settings.yaml`:
-
-```yaml
-integrations:
-  discord_enabled: true
-  discord_webhook_secret: replace-with-a-long-random-secret
-```
-
-If `discord_webhook_secret` is non-empty, callers must send:
-
-```http
-X-HAPA-Webhook-Secret: replace-with-a-long-random-secret
-```
-
-Supported input:
-
-```json
-{
-  "content": "Investigate the checkout failure",
-  "author": {
-    "username": "alice"
-  }
-}
-```
-
-`content` must be a non-empty string. `author.username` is optional and
-defaults to `discord`. The adapter submits:
-
-- title: `Discord message`;
-- description: `content`;
-- requested-by: `discord:<username>`;
-- provenance source: `discord`.
-
-It returns `201` with the normal `TaskResponse`. Disabled integrations return
-`404`; a wrong configured secret returns `401`; missing or invalid `content`
-returns `422`.
-
-Example:
-
-```sh
-curl -X POST http://localhost:8000/webhooks/discord \
-  -H "X-HAPA-Webhook-Secret: replace-with-a-long-random-secret" \
-  -H "Content-Type: application/json" \
-  -d '{"content":"Investigate checkout","author":{"username":"alice"}}'
-```
-
-This adapter does not verify Discord signatures or implement Discord
-interaction acknowledgement semantics. Put it behind a gateway that
-validates the provider request when those guarantees are required.
-
-## Telegram webhook API
-
-### `POST /webhooks/telegram`
-
-This endpoint accepts a Telegram Update-shaped JSON payload and creates a
-HAPA task. It is disabled by default.
-
-Enable it in `config/settings.yaml`:
-
-```yaml
-integrations:
-  telegram_enabled: true
-  telegram_webhook_secret: replace-with-a-long-random-secret
-```
-
-If `telegram_webhook_secret` is non-empty, send it in
-`X-HAPA-Webhook-Secret`.
-
-Supported input:
-
-```json
-{
-  "message": {
-    "text": "Investigate the checkout failure",
-    "from": {
-      "username": "alice"
-    }
-  }
-}
-```
-
-`message.text` must be a non-empty string. `message.from.username` is
-optional and defaults to `telegram`. The adapter submits:
-
-- title: `Telegram message`;
-- description: `message.text`;
-- requested-by: `telegram:<username>`;
-- provenance source: `telegram`.
-
-It returns `201` with the normal `TaskResponse`. Disabled integrations return
-`404`; a wrong configured secret returns `401`; missing or invalid
-`message.text` returns `422`.
-
-Example:
-
-```sh
-curl -X POST http://localhost:8000/webhooks/telegram \
-  -H "X-HAPA-Webhook-Secret: replace-with-a-long-random-secret" \
-  -H "Content-Type: application/json" \
-  -d '{"message":{"text":"Investigate checkout","from":{"username":"alice"}}}'
-```
-
-The endpoint is a payload normalizer, not a full Telegram Bot API client. Bot
-registration, Telegram's webhook configuration, and outbound replies are
-outside the current adapter.
+Discord and other clients should call the authenticated `/api/v1/chat/messages`
+contract directly, just like the website. There is no provider-specific
+Discord or Telegram webhook endpoint. A client that needs completion delivery
+can provide `callback_url` or consume the durable events/SSE endpoints.
 
 ## Integration and deployment notes
 
 1. Replace the development JWT secret before deploying.
-2. Use TLS for browser, SSE, WebSocket, and webhook traffic.
-3. Keep webhook secrets separate from the JWT secret and rotate them
-   independently.
-4. Restrict `/api/v1/ws/telemetry` at the network or reverse-proxy layer until
+2. Use TLS for browser, SSE, WebSocket, and callback traffic.
+3. Restrict `/api/v1/ws/telemetry` at the network or reverse-proxy layer until
    application-level WebSocket authentication is added.
-5. Persist and reconcile event history with
+4. Persist and reconcile event history with
    `GET /api/v1/tasks/{task_id}/events` because realtime delivery is
    in-process, non-replaying, and can drop messages for slow consumers.

@@ -26,7 +26,7 @@ docker compose up --build
 
 ## API usage
 
-For the complete HTTP, SSE, WebSocket, Discord webhook, and Telegram webhook
+For the complete HTTP, SSE, WebSocket, chat, callback, and recurring schedule
 reference, see [`api.md`](api.md).
 
 Task, chat, approval, and event routes under `/api/v1` require an OAuth/OIDC
@@ -58,7 +58,7 @@ Workspace diffs and test reports are JSON-round-trippable structured
 artifacts; incomplete test counts or malformed artifacts block progression.
 
 `GET /health/live` is a public liveness check; `GET /health/ready` checks the
-configured durable store. Discord and Telegram webhook adapters are disabled
-by default. Enable them in `config/settings.yaml`, set their shared webhook
-secret, and send provider payloads to `/webhooks/discord` or
-`/webhooks/telegram` with the `X-HAPA-Webhook-Secret` header.
+configured durable store. Discord clients use the normal authenticated `/api/v1/chat/messages` contract
+like the website. Completion follow-ups can be read from durable events/SSE or
+delivered to an optional `callback_url`; there are no provider-specific
+Discord or Telegram webhook routes.

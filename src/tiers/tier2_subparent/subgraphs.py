@@ -55,19 +55,13 @@ def _coordinate(state: Tier2GraphState) -> Tier2GraphState:
     }
 
 
-def _finish(state: Tier2GraphState) -> Tier2GraphState:
-    return state
-
-
 def build_tier2_graph():
     """Compile the Tier 2 coordinator graph."""
 
     graph = StateGraph(Tier2GraphState)
     graph.add_node("coordinate", _coordinate)
-    graph.add_node("finish", _finish)
     graph.add_edge(START, "coordinate")
-    graph.add_edge("coordinate", "finish")
-    graph.add_edge("finish", END)
+    graph.add_edge("coordinate", END)
     return graph.compile()
 
 

@@ -27,6 +27,15 @@ class ProviderConfigurationError(ValueError):
     """Raised when a provider lacks required configuration."""
 
 
+_ENDPOINT_DEFAULTS = {
+    ProviderName.OPENAI: "https://api.openai.com/v1",
+    ProviderName.ANTHROPIC: "https://api.anthropic.com",
+    ProviderName.GOOGLE: "https://generativelanguage.googleapis.com",
+    ProviderName.OPENROUTER: "https://openrouter.ai/api/v1",
+    ProviderName.GENERIC_OPENAI_COMPATIBLE: "",
+}
+
+
 @dataclass(frozen=True)
 class LLMMessage:
     role: str
@@ -241,28 +250,11 @@ def create_provider(
     env = os.environ if environ is None else environ
     prefix = provider_name.value.upper()
     api_key = env.get(f"{prefix}_API_KEY", "")
-    endpoint_defaults = {
-        ProviderName.OPENAI: "https://api.openai.com/v1",
-        ProviderName.ANTHROPIC: "https://api.anthropic.com",
-        ProviderName.GOOGLE: "https://generativelanguage.googleapis.com",
-        ProviderName.OPENROUTER: "https://openrouter.ai/api/v1",
-        ProviderName.GENERIC_OPENAI_COMPATIBLE: "",
-    }
-    endpoint = env.get(f"{prefix}_BASE_URL", endpoint_defaults[provider_name])
+    endpoint = env.get(f"{prefix}_BASE_URL", _ENDPOINT_DEFAULTS[provider_name])
     model = env.get(f"{prefix}_MODEL", "")
     if not model:
         raise ProviderConfigurationError(f"{provider_name.value} model is required")
-    if provider_name == ProviderName.ANTHROPIC:
-        return AnthropicProvider(api_key, endpoint, model, transport=transport)
-    if provider_name == ProviderName.GOOGLE:
-        return GeminiProvider(api_key, endpoint, model, transport=transport)
-    return OpenAICompatibleProvider(
-        provider_name,
-        api_key,
-        endpoint,
-        model,
-        transport=transport,
-    )
+    return _build_provider(provider_name, api_key, endpoint, model, transport)
 
 
 def create_configured_provider(
@@ -278,28 +270,25 @@ def create_configured_provider(
     provider_name = ProviderName(settings.llm.active_provider)
     prefix = provider_name.value.upper()
     api_key = env.get(f"{prefix}_API_KEY", "")
-    endpoint_defaults = {
-        ProviderName.OPENAI: "https://api.openai.com/v1",
-        ProviderName.ANTHROPIC: "https://api.anthropic.com",
-        ProviderName.GOOGLE: "https://generativelanguage.googleapis.com",
-        ProviderName.OPENROUTER: "https://openrouter.ai/api/v1",
-        ProviderName.GENERIC_OPENAI_COMPATIBLE: "",
-    }
-    endpoint = env.get(f"{prefix}_BASE_URL", endpoint_defaults[provider_name])
+    endpoint = env.get(f"{prefix}_BASE_URL", _ENDPOINT_DEFAULTS[provider_name])
+    return _build_provider(
+        provider_name, api_key, endpoint, settings.llm.strong_model, transport
+    )
+
+
+def _build_provider(
+    provider_name: ProviderName,
+    api_key: str,
+    endpoint: str,
+    model: str,
+    transport: Transport,
+) -> LLMProvider:
     if provider_name == ProviderName.ANTHROPIC:
-        return AnthropicProvider(
-            api_key, endpoint, settings.llm.strong_model, transport=transport
-        )
+        return AnthropicProvider(api_key, endpoint, model, transport=transport)
     if provider_name == ProviderName.GOOGLE:
-        return GeminiProvider(
-            api_key, endpoint, settings.llm.strong_model, transport=transport
-        )
+        return GeminiProvider(api_key, endpoint, model, transport=transport)
     return OpenAICompatibleProvider(
-        provider_name,
-        api_key,
-        endpoint,
-        settings.llm.strong_model,
-        transport=transport,
+        provider_name, api_key, endpoint, model, transport=transport
     )
 
 

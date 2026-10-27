@@ -24,19 +24,11 @@ class ContainerResult:
 
 
 class DockerContainer(Protocol):
-    id: str
-
-    def start(self) -> None: ...
-
     def wait(self, timeout: int | None = None) -> dict[str, Any]: ...
 
     def logs(self, stdout: bool = True, stderr: bool = True) -> bytes: ...
 
     def remove(self, force: bool = False) -> None: ...
-
-
-class DockerClient(Protocol):
-    def containers_run(self, **kwargs: Any) -> DockerContainer: ...
 
 
 class ContainerManager:
@@ -53,7 +45,7 @@ class ContainerManager:
     ) -> None:
         if timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be greater than zero")
-        self.client = client or docker.from_env()
+        self.client = client if client is not None else docker.from_env()
         self.image = image
         self.timeout_seconds = timeout_seconds
         self.network_mode = network_mode
