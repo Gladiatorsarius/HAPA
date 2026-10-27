@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import AfterValidator, Field, field_validator, model_validator
 
 from src.core.schemas import (
     ExecutionLineage,
@@ -17,19 +17,21 @@ from src.core.schemas import (
 )
 
 
+def _validate_callback_url(value: str | None) -> str | None:
+    if value is not None and not value.startswith(("http://", "https://")):
+        raise ValueError("callback_url must use http:// or https://")
+    return value
+
+
+CallbackUrl = Annotated[str | None, AfterValidator(_validate_callback_url)]
+
+
 class TaskRequest(SchemaModel):
     title: NonEmptyText
     description: str = ""
     requested_by: NonEmptyText
     labels: list[NonEmptyText] = Field(default_factory=list)
-    callback_url: str | None = None
-
-    @field_validator("callback_url")
-    @classmethod
-    def validate_callback_url(cls, value: str | None) -> str | None:
-        if value is not None and not value.startswith(("http://", "https://")):
-            raise ValueError("callback_url must use http:// or https://")
-        return value
+    callback_url: CallbackUrl = None
 
 
 class ChatMessageRequest(SchemaModel):
@@ -37,14 +39,7 @@ class ChatMessageRequest(SchemaModel):
     requested_by: NonEmptyText
     title: NonEmptyText = "Chat task"
     labels: list[NonEmptyText] = Field(default_factory=list)
-    callback_url: str | None = None
-
-    @field_validator("callback_url")
-    @classmethod
-    def validate_callback_url(cls, value: str | None) -> str | None:
-        if value is not None and not value.startswith(("http://", "https://")):
-            raise ValueError("callback_url must use http:// or https://")
-        return value
+    callback_url: CallbackUrl = None
 
 
 class ChatAcknowledgement(SchemaModel):
@@ -65,14 +60,7 @@ class ScheduleRequest(SchemaModel):
     interval_seconds: int | None = Field(default=None, ge=1)
     cron_expression: str | None = None
     timezone: NonEmptyText = "UTC"
-    callback_url: str | None = None
-
-    @field_validator("callback_url")
-    @classmethod
-    def validate_callback_url(cls, value: str | None) -> str | None:
-        if value is not None and not value.startswith(("http://", "https://")):
-            raise ValueError("callback_url must use http:// or https://")
-        return value
+    callback_url: CallbackUrl = None
 
     @field_validator("timezone")
     @classmethod

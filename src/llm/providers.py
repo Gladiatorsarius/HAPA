@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from functools import reduce
 import json
 import os
 from dataclasses import dataclass
 from enum import StrEnum
+from operator import getitem
 from typing import Callable, Mapping, Protocol
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -67,6 +69,23 @@ def _default_transport(request: Request) -> bytes:
         raise RuntimeError(f"LLM provider request failed: {exc}") from exc
 
 
+def _complete_response(
+    provider: ProviderName,
+    model: str,
+    transport: Transport,
+    request: Request,
+    path: tuple[str | int, ...],
+) -> LLMResponse:
+    raw = json.loads(transport(request))
+    try:
+        content = reduce(getitem, path, raw)
+    except (KeyError, IndexError, TypeError) as exc:
+        raise RuntimeError(f"{provider.value} returned an invalid response") from exc
+    if not isinstance(content, str):
+        raise RuntimeError(f"{provider.value} returned non-text content")
+    return LLMResponse(provider, model, content, raw)
+
+
 class LLMProvider(Protocol):
     name: ProviderName
     model: str
@@ -118,14 +137,7 @@ class OpenAICompatibleProvider:
         )
 
     def complete(self, messages: list[LLMMessage], *, temperature: float = 0.0) -> LLMResponse:
-        raw = json.loads(self._transport(self.build_request(messages, temperature)))
-        try:
-            content = raw["choices"][0]["message"]["content"]
-        except (KeyError, IndexError, TypeError) as exc:
-            raise RuntimeError(f"{self.name.value} returned an invalid response") from exc
-        if not isinstance(content, str):
-            raise RuntimeError(f"{self.name.value} returned non-text content")
-        return LLMResponse(self.name, self.model, content, raw)
+        return _complete_response(self.name, self.model, self._transport, self.build_request(messages, temperature), ("choices", 0, "message", "content"))
 
 
 class AnthropicProvider:
@@ -176,14 +188,7 @@ class AnthropicProvider:
         )
 
     def complete(self, messages: list[LLMMessage], *, temperature: float = 0.0) -> LLMResponse:
-        raw = json.loads(self._transport(self.build_request(messages, temperature)))
-        try:
-            content = raw["content"][0]["text"]
-        except (KeyError, IndexError, TypeError) as exc:
-            raise RuntimeError("anthropic returned an invalid response") from exc
-        if not isinstance(content, str):
-            raise RuntimeError("anthropic returned non-text content")
-        return LLMResponse(self.name, self.model, content, raw)
+        return _complete_response(self.name, self.model, self._transport, self.build_request(messages, temperature), ("content", 0, "text"))
 
 
 class GeminiProvider:
@@ -227,14 +232,7 @@ class GeminiProvider:
         )
 
     def complete(self, messages: list[LLMMessage], *, temperature: float = 0.0) -> LLMResponse:
-        raw = json.loads(self._transport(self.build_request(messages, temperature)))
-        try:
-            content = raw["candidates"][0]["content"]["parts"][0]["text"]
-        except (KeyError, IndexError, TypeError) as exc:
-            raise RuntimeError("google returned an invalid response") from exc
-        if not isinstance(content, str):
-            raise RuntimeError("google returned non-text content")
-        return LLMResponse(self.name, self.model, content, raw)
+        return _complete_response(self.name, self.model, self._transport, self.build_request(messages, temperature), ("candidates", 0, "content", "parts", 0, "text"))
 
 
 def create_provider(
