@@ -6,8 +6,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 from src.core.settings import AppSettings, load_settings
 
-from .routes import approvals, chat, health, observability, tasks
-from src.integrations import discord_bot, telegram_bot
+from .routes import approvals, chat, health, observability, schedules, tasks
 from .store import ApiStore
 from .websocket import TelemetryBus
 
@@ -21,10 +20,9 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
     app.include_router(health.router)
     app.include_router(chat.router)
     app.include_router(tasks.router)
+    app.include_router(schedules.router)
     app.include_router(approvals.router)
     app.include_router(observability.router)
-    app.include_router(discord_bot.router)
-    app.include_router(telegram_bot.router)
 
     @app.websocket("/api/v1/ws/telemetry")
     async def telemetry_socket(websocket: WebSocket) -> None:

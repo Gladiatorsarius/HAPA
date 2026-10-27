@@ -20,11 +20,6 @@ storage:
 telemetry:
   event_retention_seconds: 86400
   sse_keepalive_seconds: 15
-integrations:
-  discord_enabled: false
-  discord_webhook_secret: ""
-  telegram_enabled: false
-  telegram_webhook_secret: ""
 temporal:
   target: localhost:7233
   namespace: hapa

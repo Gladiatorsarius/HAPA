@@ -40,15 +40,6 @@ class TelemetrySettings(SchemaModel):
     sse_keepalive_seconds: int = 15
 
 
-class IntegrationSettings(SchemaModel):
-    """Webhook integration toggles and shared secrets."""
-
-    discord_enabled: bool = False
-    discord_webhook_secret: str = ""
-    telegram_enabled: bool = False
-    telegram_webhook_secret: str = ""
-
-
 class TemporalSettings(SchemaModel):
     """Temporal workflow connection configuration."""
 
@@ -99,7 +90,6 @@ class AppSettings(SchemaModel):
     auth: AuthSettings = AuthSettings()
     storage: StorageSettings = StorageSettings()
     telemetry: TelemetrySettings = TelemetrySettings()
-    integrations: IntegrationSettings = IntegrationSettings()
     temporal: TemporalSettings = TemporalSettings()
     docker: DockerSettings = DockerSettings()
     browser: BrowserSettings = BrowserSettings()
@@ -140,7 +130,6 @@ __all__ = [
     "LLMSettings",
     "StorageSettings",
     "TelemetrySettings",
-    "IntegrationSettings",
     "TemporalSettings",
     "load_settings",
     "settings",

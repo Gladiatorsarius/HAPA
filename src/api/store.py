@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 
 class ApiStore:
@@ -34,6 +34,11 @@ class ApiStore:
             CREATE TABLE IF NOT EXISTS events (
                 event_id INTEGER PRIMARY KEY AUTOINCREMENT, task_id TEXT NOT NULL,
                 event_type TEXT NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS schedules (
+                schedule_id TEXT PRIMARY KEY, payload TEXT NOT NULL, state TEXT NOT NULL,
+                next_run_at TEXT NOT NULL, last_run_at TEXT, created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
             );
             """
         )
@@ -67,13 +72,28 @@ class ApiStore:
     def update_task(self, task_id: UUID, *, state: str, approval_required: bool | None = None) -> dict[str, Any]:
         now = self._now()
         with self._lock:
-            if approval_required is None:
-                self._connection.execute("UPDATE tasks SET state=?, updated_at=? WHERE task_id=?", (state, now, str(task_id)))
-            else:
-                self._connection.execute(
-                    "UPDATE tasks SET state=?, approval_required=?, updated_at=? WHERE task_id=?",
-                    (state, int(approval_required), now, str(task_id)),
-                )
+            fields = ["state=?", "updated_at=?"]
+            values: list[Any] = [state, now]
+            if approval_required is not None:
+                fields.insert(1, "approval_required=?")
+                values.insert(1, int(approval_required))
+            values.append(str(task_id))
+            self._connection.execute(
+                f"UPDATE tasks SET {', '.join(fields)} WHERE task_id=?",
+                values,
+            )
+            self._connection.commit()
+        return self.get_task(task_id)
+
+    def update_task_payload(self, task_id: UUID, payload: dict[str, Any]) -> dict[str, Any]:
+        now = self._now()
+        with self._lock:
+            cursor = self._connection.execute(
+                "UPDATE tasks SET payload=?, updated_at=? WHERE task_id=?",
+                (json.dumps(payload, default=str), now, str(task_id)),
+            )
+            if cursor.rowcount != 1:
+                raise KeyError(str(task_id))
             self._connection.commit()
         return self.get_task(task_id)
 
@@ -133,3 +153,62 @@ class ApiStore:
     def list_events(self, task_id: UUID) -> list[dict[str, Any]]:
         rows = self._connection.execute("SELECT * FROM events WHERE task_id=? ORDER BY event_id", (str(task_id),)).fetchall()
         return [{**dict(row), "payload": json.loads(row["payload"])} for row in rows]
+
+    def create_schedule(self, payload: dict[str, Any], next_run_at: datetime) -> dict[str, Any]:
+        schedule_id = str(payload.get("schedule_id", uuid4()))
+        now = self._now()
+        payload = {**payload, "schedule_id": schedule_id}
+        with self._lock:
+            self._connection.execute(
+                "INSERT INTO schedules (schedule_id, payload, state, next_run_at, last_run_at, created_at, updated_at) "
+                "VALUES (?, ?, 'ACTIVE', ?, NULL, ?, ?)",
+                (schedule_id, json.dumps(payload, default=str), next_run_at.isoformat(), now, now),
+            )
+            self._connection.commit()
+        return self.get_schedule(UUID(schedule_id))
+
+    def get_schedule(self, schedule_id: UUID) -> dict[str, Any]:
+        row = self._connection.execute(
+            "SELECT * FROM schedules WHERE schedule_id=?", (str(schedule_id),)
+        ).fetchone()
+        if row is None:
+            raise KeyError(str(schedule_id))
+        result = json.loads(row["payload"])
+        result.update(
+            state=row["state"],
+            next_run_at=row["next_run_at"],
+            last_run_at=row["last_run_at"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+        )
+        return result
+
+    def list_schedules(self) -> list[dict[str, Any]]:
+        rows = self._connection.execute(
+            "SELECT schedule_id FROM schedules ORDER BY created_at"
+        ).fetchall()
+        return [self.get_schedule(UUID(row["schedule_id"])) for row in rows]
+
+    def update_schedule(
+        self,
+        schedule_id: UUID,
+        *,
+        state: str | None = None,
+        next_run_at: datetime | None = None,
+        last_run_at: datetime | None = None,
+    ) -> dict[str, Any]:
+        current = self.get_schedule(schedule_id)
+        now = self._now()
+        with self._lock:
+            self._connection.execute(
+                "UPDATE schedules SET state=?, next_run_at=?, last_run_at=?, updated_at=? WHERE schedule_id=?",
+                (
+                    state or current["state"],
+                    (next_run_at.isoformat() if next_run_at else current["next_run_at"]),
+                    (last_run_at.isoformat() if last_run_at else current["last_run_at"]),
+                    now,
+                    str(schedule_id),
+                ),
+            )
+            self._connection.commit()
+        return self.get_schedule(schedule_id)

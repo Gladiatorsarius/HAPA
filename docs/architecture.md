@@ -42,7 +42,7 @@ The target layout described by the design artifacts is:
 - [`src/tiers/tier2_subparent/`](../src/tiers/tier2_subparent/) — QA overseer sub-graphs and evaluator
 - [`src/tiers/tier3_execution/`](../src/tiers/tier3_execution/) — code execution and automation workers
 - [`src/persistence/`](../src/persistence/) — Temporal workflows and Git-based delta tracking
-- [`src/integrations/`](../src/integrations/) — Discord and Telegram ingestion adapters
+- [`src/api/routes/chat.py`](../src/api/routes/chat.py) — normalized conversational ingress
 - [`tests/`](../tests/) — API, tier, and persistence test suites
 - [`scripts/entrypoint.sh`](../scripts/entrypoint.sh) — container startup script
 
@@ -79,8 +79,8 @@ Expected responsibilities:
 
 Key interfaces:
 
-- `POST /api/v1/chat`
-- `POST /api/v1/tasks/schedule`
+- `POST /api/v1/chat/messages`
+- `POST /api/v1/schedules`
 - `GET /api/v1/tasks/active`
 - `GET /api/v1/approvals/pending`
 - `POST /api/v1/approvals/{task_id}/resolve`
